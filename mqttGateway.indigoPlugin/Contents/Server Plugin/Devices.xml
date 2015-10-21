@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<Devices>
+    <Device type="sensor" id="topicSub">
+        <Name>Topic Subscription</Name>
+        <ConfigUI>
+            <Field id="brokerName" type="textfield" defaultValue="server name">
+                <Label>Broker Hostname:</Label>
+            </Field>
+            <Field id="brokerTopic" type="textfield" defaultValue="device/status">
+                <Label>Topic:</Label>
+            </Field>
+            <Field id="SupportsOnState" type="checkbox" defaultValue="true">
+                <Label>Show ON/OFF state:</Label>
+            </Field>
+            <Field id="separator1" type="separator"/>
+            <Field id="SupportsStatusRequest" type="checkbox" defaultValue="true">
+                <Label>Enable Status Request:</Label>
+            </Field>
+            <Field id="brokerStatusTopic" type="textfield" defaultValue="device/status" enabledBindingId="SupportsStatusRequest">
+                <Label>Status Topic:</Label>
+            </Field>
+            <Field id="brokerStatusMessage" type="textfield" defaultValue="update"  enabledBindingId="SupportsStatusRequest">
+                <Label>Status Message:</Label>
+            </Field>
+        </ConfigUI>
+        <States>
+            <State id="topicMessage">
+                <ValueType>String</ValueType>
+                <TriggerLabel>Topic Message</TriggerLabel>
+                <ControlPageLabel>Topic Message</ControlPageLabel>
+            </State>
+        </States>
+        <UiDisplayStateId>onOffState</UiDisplayStateId>
+    </Device>
+</Devices>

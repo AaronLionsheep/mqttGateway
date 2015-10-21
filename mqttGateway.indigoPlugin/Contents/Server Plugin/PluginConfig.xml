@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<PluginConfig>
+	<!-- You can add a SupportURL element inside here if you want a context
+		 sensitive help link on the config UI - otherwise it will just link
+		 to the URL specified in the Info.plist. -->
+	<!-- <SupportURL>http://www.simplifiedthinking.co.uk</SupportURL> -->
+
+	<Field type="textfield" id="mqttSleepPoll" defaultvalue="30">
+        <Label>Process Check Interval:</Label>
+    </Field>
+    <Field id="infoLabel" type="label">
+        <Label>Checks for listener process every (x) seconds</Label>
+    </Field>
+    <Field id="simpleSeparator2" type="separator"/>
+	<Field type="checkbox" id="mqttDebugInfo">
+		<Label></Label>
+		<Description>Enable debug logging (not recommended)</Description>
+	</Field>
+</PluginConfig>

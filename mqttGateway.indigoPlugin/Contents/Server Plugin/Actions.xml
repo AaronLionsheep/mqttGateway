@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<!-- If your plugin wants to add actions to the action step dialog that are independent
+	 of a device (devices define their own actions), define them here.
+-->
+<Actions>
+    <Action id="sendMessage" deviceFilter="self">
+        <Name>Send Message</Name>
+        <CallbackMethod>sendMessage</CallbackMethod>
+        <ConfigUI>
+            <Field id="brokerMessage" type="textfield" defaultValue="message">
+                <Label>Message:</Label>
+            </Field>
+        </ConfigUI>
+    </Action>
+</Actions>
