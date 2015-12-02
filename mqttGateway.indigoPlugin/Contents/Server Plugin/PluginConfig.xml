@@ -9,9 +9,13 @@
         <Label>Process Check Interval:</Label>
     </Field>
     <Field id="infoLabel" type="label">
-        <Label>Checks for listener process every (x) seconds</Label>
+        <Label>Checks listener process state every (n) seconds</Label>
     </Field>
     <Field id="simpleSeparator2" type="separator"/>
+    <Field type="checkbox" id="mqttDefaultState">
+        <Label></Label>
+        <Description>Reset mqtt device state to OFF on Plugin Start</Description>
+    </Field>
 	<Field type="checkbox" id="mqttDebugInfo">
 		<Label></Label>
 		<Description>Enable debug logging (not recommended)</Description>
