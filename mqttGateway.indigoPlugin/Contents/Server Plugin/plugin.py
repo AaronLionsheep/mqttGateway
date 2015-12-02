@@ -7,6 +7,8 @@
 # Requires Mosquitto MQTT (v3.1) Client v1.4 to be installed on a pre-configured Broker Server
 # Visit http://simplifiedthinking.co.uk/2015/10/07/install-mqtt-server/ for instructions
 #
+# mqttGateway v1.0.3 Copyright (c) 2015, Simplified Thinking / Jeremy Rutherford.
+#
 # CHANGE LOG
 #
 # Version    |  Description
@@ -14,7 +16,12 @@
 # 1.0.0         Initial Release
 #
 # 1.0.1         Fixed Bug - removed redundant process terminate in shutdown method
-#               In Development ...
+#
+# 1.0.2         Changed method used for creating new sub processes, limiting number of open subprocesses and pointers
+#
+# 1.0.3         Added functionality to support change of logging level without requiring restart
+#               New check box in plugin prefs to support resetting device state to OFF when starting plugin
+#               Improved thread awareness
 #
 
 import indigo
@@ -38,31 +45,45 @@ class Plugin(indigo.PluginBase):
     def __init__(self, pluginId, pluginDisplayName, pluginVersion, pluginPrefs):
         indigo.PluginBase.__init__(self, pluginId, pluginDisplayName, pluginVersion, pluginPrefs)
 
-        self.debug = pluginPrefs.get("mqttDebugInfo", False)
-
-        try:
-            self.sleepinterval = int(pluginPrefs.get("mqttSleepPoll", 30))
-        except:
-            self.sleepinterval = 30
-        
-        if self.debug == True:
-            self.debugLog("mqtt debugging enabled")
+        self.updatePrefs(pluginPrefs)
+    
 
     def __del__(self):
         indigo.PluginBase.__del__(self)
 
 
+    def updatePrefs(self, prefs):
+        self.debug = prefs.get("mqttDebugInfo", False)
+        self.resetState = prefs.get("mqttDefaultState", False)
+        
+        try:
+            self.sleepinterval = int(prefs.get("mqttSleepPoll", 30))
+        except:
+            self.sleepinterval = 30
+        
+        if self.debug == True:
+            indigo.server.log("mqtt debugging enabled")
+        else:
+            indigo.server.log("mqtt debugging disabled")
+    
+
     def startup(self):
         self.debugLog("startup called")
 
         # set the global variables
-        self.mqttProc = []
-        self.mqttPid = { "topic" : 0 }
-        self.mqttProc_id = 0
+        self.mqttProc = {}
         self.io_q = Queue.Queue()
     
         # start the queue reader
         threading.Thread(target = self.io_queue_reader).start()
+    
+        # reset the device states if requested by user
+        if self.resetState is True:
+            self.debugLog("resetting device states to OFF")
+
+            for dev in indigo.devices.iter("self"):
+                if dev.enabled and dev.configured:
+                    dev.updateStateOnServer("onOffState", value=0)
  
 
     def shutdown(self):
@@ -71,22 +92,19 @@ class Plugin(indigo.PluginBase):
 
     def runConcurrentThread(self):
         try:
-            self.debugLog("Starting ConcurrentThread ... Active threads = " + str(threading.activeCount()))
+            self.debugLog("Starting ConcurrentThread ... Active listener threads = " + str(threading.activeCount() - 2)) # thread 1 = main, thread 2 = io_queue
 
             while True:
                 for dev in indigo.devices.iter("self"):
                     if not dev.enabled or not dev.configured:
                         continue
             
-                    # check to see if the listener is still running ...
-                    checkPid = self.mqttPid[dev.pluginProps["brokerName"] + dev.pluginProps["brokerTopic"]]
-            
                     try:
-                        os.kill(checkPid, 0)
+                        self.mqttProc[dev.pluginProps["brokerName"] + dev.pluginProps["brokerTopic"]].send_signal(0)
                     except OSError:
                         # the process has stopped, restart it
                         self.deviceStartComm(dev)
-
+        
                 self.sleep(self.sleepinterval)
 
         except self.StopThread:
@@ -96,24 +114,18 @@ class Plugin(indigo.PluginBase):
     def deviceStartComm(self, dev):
         # start the mqtt listener thread for this device, storing the PID for future management
         if dev.enabled and dev.configured:
-            self.mqttProc.append(subprocess.Popen(['/usr/local/bin/mosquitto_sub', '-h', dev.pluginProps["brokerName"], '-t', dev.pluginProps["brokerTopic"]], stdout=subprocess.PIPE))
-            threading.Thread(target = self.mqtt_listener, name = dev.name.replace(" ",""), args = (self.mqttProc[self.mqttProc_id], dev.pluginProps["brokerName"], dev.pluginProps["brokerTopic"])).start()
- 
-            self.mqttPid[dev.pluginProps["brokerName"] + dev.pluginProps["brokerTopic"]] = self.mqttProc[self.mqttProc_id].pid
-            self.mqttProc_id = self.mqttProc_id + 1
-
+            self.mqttProc[dev.pluginProps["brokerName"] + dev.pluginProps["brokerTopic"]] = subprocess.Popen(['/usr/local/bin/mosquitto_sub', '-h', dev.pluginProps["brokerName"], '-t', dev.pluginProps["brokerTopic"]], stdout=subprocess.PIPE)
+            threading.Thread(target = self.mqtt_listener, name = dev.name.replace(" ",""), args = (self.mqttProc[dev.pluginProps["brokerName"] + dev.pluginProps["brokerTopic"]], dev.pluginProps["brokerName"], dev.pluginProps["brokerTopic"])).start()
+    
 
     def deviceStopComm(self, dev):
         # stop the mqtt listener thread for this device
         if dev.enabled and dev.configured:
-            targetPid = self.mqttPid[dev.pluginProps["brokerName"] + dev.pluginProps["brokerTopic"]]
-            
             try:
-                os.kill(targetPid, signal.SIGKILL)
-                self.debugLog("stopped mqtt_listener for pid: " + str(targetPid))
-
+                self.mqttProc[dev.pluginProps["brokerName"] + dev.pluginProps["brokerTopic"]].terminate()
+                self.debugLog("stopped mqtt_listener for " + dev.pluginProps["brokerName"] + ":" + dev.pluginProps["brokerTopic"])
             except:
-                failed = 1 # does nothing
+                failed = 1
 
 
     ########################################
@@ -227,10 +239,9 @@ class Plugin(indigo.PluginBase):
         return (True, valuesDict)
 
 
-# To Be Implemented
-#
-# Error Handling - How does the sub client behave when it loses connection to the server for network reasons.  Multiple tries, final disable of device?
-# Startup State - If no update is broadcast from the listening device, should the state be set to off or another default value specific by the user?
-# Process Check - regularly check that listener processes are still running and restart if not
+    def closedPrefsConfigUi(self, valuesDict, userCancelled):
+        if userCancelled is False:
+            self.updatePrefs(valuesDict)
 
+        return (True, valuesDict)
 
