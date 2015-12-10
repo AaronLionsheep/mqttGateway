@@ -29,6 +29,11 @@
                 <TriggerLabel>Topic Message</TriggerLabel>
                 <ControlPageLabel>Topic Message</ControlPageLabel>
             </State>
+            <State id="topicNotification">
+                <ValueType>String</ValueType>
+                <TriggerLabel>Topic Notification</TriggerLabel>
+                <ControlPageLabel>Topic Notification</ControlPageLabel>
+            </State>
         </States>
         <UiDisplayStateId>onOffState</UiDisplayStateId>
     </Device>

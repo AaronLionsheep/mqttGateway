@@ -23,6 +23,10 @@
 #               New check box in plugin prefs to support resetting device state to OFF when starting plugin
 #               Improved thread awareness
 #
+# 1.0.4         Added new device state 'topicNotification' as a toggled boolean value that flips every time a message
+#               is received.  This allows for triggers to be launched whenever a message is received, even if the payload
+#               doesn't change
+#
 
 import indigo
 
@@ -32,6 +36,7 @@ import signal
 import Queue
 import threading
 import subprocess
+import exceptions
 
 # Note the "indigo" module is automatically imported and made available inside
 # our global name space by the host process.
@@ -104,7 +109,7 @@ class Plugin(indigo.PluginBase):
                     except OSError:
                         # the process has stopped, restart it
                         self.deviceStartComm(dev)
-        
+            
                 self.sleep(self.sleepinterval)
 
         except self.StopThread:
@@ -113,7 +118,10 @@ class Plugin(indigo.PluginBase):
 
     def deviceStartComm(self, dev):
         # start the mqtt listener thread for this device, storing the PID for future management
+        
         if dev.enabled and dev.configured:
+            dev.stateListOrDisplayStateIdChanged()
+            
             self.mqttProc[dev.pluginProps["brokerName"] + dev.pluginProps["brokerTopic"]] = subprocess.Popen(['/usr/local/bin/mosquitto_sub', '-h', dev.pluginProps["brokerName"], '-t', dev.pluginProps["brokerTopic"]], stdout=subprocess.PIPE)
             threading.Thread(target = self.mqtt_listener, name = dev.name.replace(" ",""), args = (self.mqttProc[dev.pluginProps["brokerName"] + dev.pluginProps["brokerTopic"]], dev.pluginProps["brokerName"], dev.pluginProps["brokerTopic"])).start()
     
@@ -166,7 +174,20 @@ class Plugin(indigo.PluginBase):
                             dev.updateStateOnServer("onOffState", value=onOffState[item.upper()])
                         else:
                             dev.updateStateOnServer("topicMessage", value=item)
-    
+
+                        # the value of the message may not change, so prompt that at least an update was received
+                        try:
+                            if dev.states["topicNotification"] == "0":
+                                dev.updateStateOnServer("topicNotification", value="1")
+                            else:
+                                dev.updateStateOnServer("topicNotification", value="0")
+                            
+                            self.debugLog("topic notification updated to %s" %dev.states["topicNotification"])
+                        except:
+                            dev.updateStateOnServer("topicNotification", value="0")
+                            indigo.server.log("state error")
+
+
 
     ########################################
     # Custom Action Callbacks
