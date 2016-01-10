@@ -19,7 +19,7 @@
             <Field id="brokerStatusTopic" type="textfield" defaultValue="device/status" enabledBindingId="SupportsStatusRequest">
                 <Label>Status Topic:</Label>
             </Field>
-            <Field id="brokerStatusMessage" type="textfield" defaultValue="update"  enabledBindingId="SupportsStatusRequest">
+            <Field id="brokerStatusMessage" type="textfield" enabledBindingId="SupportsStatusRequest">
                 <Label>Status Message:</Label>
             </Field>
         </ConfigUI>

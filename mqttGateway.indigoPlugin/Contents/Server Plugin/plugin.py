@@ -27,6 +27,8 @@
 #               is received.  This allows for triggers to be launched whenever a message is received, even if the payload
 #               doesn't change
 #
+# 1.0.5         Fixed bug preventing correct status request message being sent
+#
 
 import indigo
 
@@ -195,17 +197,27 @@ class Plugin(indigo.PluginBase):
 
     def sendMessage(self, action, dev):
         brokerName = dev.pluginProps["brokerName"]
-        brokerTopic = dev.pluginProps["brokerTopic"]
+        brokerStatusTopic = dev.pluginProps["brokerStatusTopic"]
 
         try:
-            brokerMessage = action.props.get("brokerMessage")
+            brokerStatusMessage = action.props.get("brokerMessage")
+
+            # if the action message is blank, default to the one configured for the device
+            if str(brokerStatusMessage) == "None":
+                brokerStatusMessage = dev.pluginProps["brokerStatusMessage"]
+    
+            # if the default device message is blank, dont send the message
+            if str(brokerStatusMessage) == "None" or str(brokerStatusMessage) == "":
+                self.debugLog("no default or action based message to send to device")
+                return False
+
         except:
             # something wrong in the text typed by the user
-            self.debugLog("unable to correctly assign message for sending")
-            return False
+			self.debugLog("unable to correctly assign message for sending")
+			return False
 
-        self.debugLog("sending message to " + brokerName + ":" + brokerTopic + " with content " + brokerMessage)
-        p = subprocess.Popen(['/usr/local/bin/mosquitto_pub', '-h', brokerName, '-t', brokerTopic, '-m', brokerMessage], stdout=subprocess.PIPE)
+        self.debugLog("sending message to " + brokerName + ":" + brokerStatusTopic + " with content " + brokerStatusMessage)
+        p = subprocess.Popen(['/usr/local/bin/mosquitto_pub', '-h', brokerName, '-t', brokerStatusTopic, '-m', brokerStatusMessage], stdout=subprocess.PIPE)
         p.wait()
             
         if p.returncode != 0:
