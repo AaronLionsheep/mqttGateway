@@ -7,7 +7,7 @@
         <Name>Send Message</Name>
         <CallbackMethod>sendMessage</CallbackMethod>
         <ConfigUI>
-            <Field id="brokerMessage" type="textfield" defaultValue="message">
+            <Field id="brokerMessage" type="textfield">
                 <Label>Message:</Label>
             </Field>
         </ConfigUI>
