@@ -29,6 +29,8 @@
 #
 # 1.0.5         Fixed bug preventing correct status request message being sent
 #
+# 1.0.6         Added ability to stop 'noisy' topic/device from adding entries to log file
+#
 
 import indigo
 
@@ -170,7 +172,7 @@ class Plugin(indigo.PluginBase):
                 for dev in indigo.devices.iter("self"):
                     if [dev.pluginProps["brokerName"] + dev.pluginProps["brokerTopic"]] == [broker + topic]:
                         self.debugLog("io_queue_reader:" + broker + ":" + topic + ": " + item)
-                        indigo.server.log("%s received mqtt message from %s" % (dev.name, topic))
+                        if dev.pluginProps["muteTopic"] == False: indigo.server.log("%s received mqtt message from %s" % (dev.name, topic))
 
                         if item.upper() in ("ON", "OFF"):
                             dev.updateStateOnServer("onOffState", value=onOffState[item.upper()])
