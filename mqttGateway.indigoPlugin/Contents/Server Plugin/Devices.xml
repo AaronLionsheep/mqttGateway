@@ -9,6 +9,9 @@
             <Field id="brokerTopic" type="textfield" defaultValue="device/status">
                 <Label>Topic:</Label>
             </Field>
+			<Field id="muteTopic" type="checkbox" defaultValue="false">
+				<Label>Disable topic update in Indigo Log</Label>
+			</Field>
             <Field id="SupportsOnState" type="checkbox" defaultValue="true">
                 <Label>Show ON/OFF state:</Label>
             </Field>
