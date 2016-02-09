@@ -7,7 +7,7 @@
 # Requires Mosquitto MQTT (v3.1) Client v1.4 to be installed on a pre-configured Broker Server
 # Visit http://simplifiedthinking.co.uk/2015/10/07/install-mqtt-server/ for instructions
 #
-# mqttGateway v1.0.7 Copyright (c) 2015, Simplified Thinking / Jeremy Rutherford.
+# mqttGateway v1.0.8 Copyright (c) 2015, Simplified Thinking / Jeremy Rutherford.
 #
 # CHANGE LOG
 #
@@ -32,6 +32,8 @@
 # 1.0.6         Added ability to stop 'noisy' topic/device from adding entries to log file
 #
 # 1.0.7         Fixed bugs in 1.0.6 release that stopped devices updating correctly
+#
+# 1.0.8         Corrected issue with onOffState updates when device did not support the property
 #
 
 import indigo
@@ -116,14 +118,11 @@ class Plugin(indigo.PluginBase):
 
     def deviceStartComm(self, dev):
         # start the mqtt listener thread for this device, storing the PID for future management
-        #for p in dev.pluginProps:
-        #    self.debugLog(p)
-        
         dev.stateListOrDisplayStateIdChanged()
         
         if dev.enabled and dev.configured:
             # reset the device states if requested by user
-            if self.resetState is True:
+            if self.resetState is True and dev.pluginProps["SupportsOnState"] is True:
                 dev.updateStateOnServer("onOffState", value=0)
             
             # start the listener thread
@@ -190,7 +189,7 @@ class Plugin(indigo.PluginBase):
                             indigo.server.log("%s received mqtt message from %s" % (dev.name, topic))
     
                         try:
-                            if item.upper() in ("ON", "OFF"):
+                            if item.upper() in ("ON", "OFF") and dev.pluginProps["SupportsOnState"] is True:
                                 dev.updateStateOnServer("onOffState", value=onOffState[item.upper()])
                             else:
                                 dev.updateStateOnServer("topicMessage", value=item)
