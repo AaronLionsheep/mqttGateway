@@ -7,7 +7,7 @@
 # Requires Mosquitto MQTT (v3.1) Client v1.4 to be installed on a pre-configured Broker Server
 # Visit http://simplifiedthinking.co.uk/2015/10/07/install-mqtt-server/ for instructions
 #
-# mqttGateway v1.0.3 Copyright (c) 2015, Simplified Thinking / Jeremy Rutherford.
+# mqttGateway v1.0.7 Copyright (c) 2015, Simplified Thinking / Jeremy Rutherford.
 #
 # CHANGE LOG
 #
@@ -30,6 +30,8 @@
 # 1.0.5         Fixed bug preventing correct status request message being sent
 #
 # 1.0.6         Added ability to stop 'noisy' topic/device from adding entries to log file
+#
+# 1.0.7         Fixed bugs in 1.0.6 release that stopped devices updating correctly
 #
 
 import indigo
@@ -86,15 +88,7 @@ class Plugin(indigo.PluginBase):
         # start the queue reader
         threading.Thread(target = self.io_queue_reader).start()
     
-        # reset the device states if requested by user
-        if self.resetState is True:
-            self.debugLog("resetting device states to OFF")
-
-            for dev in indigo.devices.iter("self"):
-                if dev.enabled and dev.configured:
-                    dev.updateStateOnServer("onOffState", value=0)
  
-
     def shutdown(self):
         self.debugLog("shutdown called")
 
@@ -122,12 +116,19 @@ class Plugin(indigo.PluginBase):
 
     def deviceStartComm(self, dev):
         # start the mqtt listener thread for this device, storing the PID for future management
+        #for p in dev.pluginProps:
+        #    self.debugLog(p)
+        
+        dev.stateListOrDisplayStateIdChanged()
         
         if dev.enabled and dev.configured:
-            dev.stateListOrDisplayStateIdChanged()
+            # reset the device states if requested by user
+            if self.resetState is True:
+                dev.updateStateOnServer("onOffState", value=0)
             
+            # start the listener thread
             self.mqttProc[dev.pluginProps["brokerName"] + dev.pluginProps["brokerTopic"]] = subprocess.Popen(['/usr/local/bin/mosquitto_sub', '-h', dev.pluginProps["brokerName"], '-t', dev.pluginProps["brokerTopic"]], stdout=subprocess.PIPE)
-            threading.Thread(target = self.mqtt_listener, name = dev.name.replace(" ",""), args = (self.mqttProc[dev.pluginProps["brokerName"] + dev.pluginProps["brokerTopic"]], dev.pluginProps["brokerName"], dev.pluginProps["brokerTopic"])).start()
+            threading.Thread(target = self.mqtt_listener, name = dev.name.replace(" ",""), args = (self.mqttProc[dev.pluginProps["brokerName"] + dev.pluginProps["brokerTopic"]], dev.pluginProps["brokerName"], dev.pluginProps["brokerTopic"], self.resetState)).start()
     
 
     def deviceStopComm(self, dev):
@@ -144,8 +145,13 @@ class Plugin(indigo.PluginBase):
     # Sensor Functions
     ######################
 
-    def mqtt_listener(self, proc, broker, topic):
-        self.debugLog("mqtt_listener for " + broker + ":" + topic + " started with pid: " + str(proc.pid))
+    def mqtt_listener(self, proc, broker, topic, reset):
+        updateText = "mqtt_listener for " + broker + ":" + topic + " started with pid: " + str(proc.pid)
+        
+        if reset == True:
+            updateText = updateText + ", onOffState reset"
+        
+        self.debugLog(updateText)
         
         while True:
             line = proc.stdout.readline()
@@ -171,14 +177,26 @@ class Plugin(indigo.PluginBase):
             else:
                 for dev in indigo.devices.iter("self"):
                     if [dev.pluginProps["brokerName"] + dev.pluginProps["brokerTopic"]] == [broker + topic]:
+                        # incoming message related to this device
+                        
                         self.debugLog("io_queue_reader:" + broker + ":" + topic + ": " + item)
-                        if dev.pluginProps["muteTopic"] == False: indigo.server.log("%s received mqtt message from %s" % (dev.name, topic))
-
-                        if item.upper() in ("ON", "OFF"):
-                            dev.updateStateOnServer("onOffState", value=onOffState[item.upper()])
-                        else:
-                            dev.updateStateOnServer("topicMessage", value=item)
-
+                        
+                        try:
+                            if dev.pluginProps["muteTopic"] == False:
+                                indigo.server.log("%s received mqtt message from %s" % (dev.name, topic))
+                        except:
+                            # error checking device property, set to False as default
+                            dev.pluginProps["muteTopic"] = False
+                            indigo.server.log("%s received mqtt message from %s" % (dev.name, topic))
+    
+                        try:
+                            if item.upper() in ("ON", "OFF"):
+                                dev.updateStateOnServer("onOffState", value=onOffState[item.upper()])
+                            else:
+                                dev.updateStateOnServer("topicMessage", value=item)
+                        except e:
+                            indigo.server.log("error updating state, " + e)
+                        
                         # the value of the message may not change, so prompt that at least an update was received
                         try:
                             if dev.states["topicNotification"] == "0":
