@@ -9,7 +9,7 @@
             <Field id="brokerSecurity" type="checkbox" defaultValue="false">
                 <Label>Enable Secure Connection:</Label>
             </Field>
-            <Field id="brokerClientPrefix" type="textfield" defaultValue="" visibleBindingId="brokerSecurity" visibleBindingValue="true">
+            <Field id="brokerClientPrefix" type="textfield" defaultValue="" visibleBindingId="brokerSecurity" visibleBindingValue="true" hidden="true">
                 <Label>Client Prefix:</Label>
             </Field>
             <Field id="brokerUsername" type="textfield" visibleBindingId="brokerSecurity" visibleBindingValue="true">
