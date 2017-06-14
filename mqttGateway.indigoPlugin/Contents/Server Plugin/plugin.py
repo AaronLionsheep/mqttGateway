@@ -37,7 +37,9 @@
 #
 # 1.1.0         Added support for basic authentication and embedding Indigo Variables when sending message to topic
 #
-#               Do I want to rewrite to remove threading???
+# 1.1.1         Simplified Variable substiution using Indigo standard method - thanks Jay! :)
+#
+
 
 import indigo
 
@@ -272,12 +274,8 @@ class Plugin(indigo.PluginBase):
                 brokerStatusMessage = dev.pluginProps["brokerStatusMessage"]
 
             # check if variable needs to be sent
-            try:
-                brokerStatusMessage = re.sub(r"\%(\w+)\%", indigo.variables[
-                    re.search(r"\%(\w+)\%", brokerStatusMessage).group(1)].value, brokerStatusMessage)
-
-            except:
-                noVar = 1
+            if self.substituteVariable(brokerStatusMessage, validateOnly=True):
+                brokerStatusMessage = self.substituteVariable(brokerStatusMessage, validateOnly=False)
 
         except:
             # something wrong in the text typed by the user
