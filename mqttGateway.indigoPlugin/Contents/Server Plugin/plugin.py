@@ -127,10 +127,14 @@ class Plugin(indigo.PluginBase):
 
             brokerName = dev.pluginProps["brokerName"]
             brokerTopic = dev.pluginProps["brokerTopic"]
-            brokerSecurity = dev.pluginProps["brokerSecurity"]
-            brokerClientPrefix = dev.pluginProps["brokerClientPrefix"]
-            brokerUsername = dev.pluginProps["brokerUsername"]
-            brokerPassword = dev.pluginProps["brokerPassword"]
+
+            try:
+                brokerSecurity = dev.pluginProps["brokerSecurity"]
+                brokerClientPrefix = dev.pluginProps["brokerClientPrefix"]
+                brokerUsername = dev.pluginProps["brokerUsername"]
+                brokerPassword = dev.pluginProps["brokerPassword"]
+            except:
+                brokerSecurity = False
 
             connectionString = ["/usr/local/bin/mosquitto_sub", "-h", brokerName, "-t", brokerTopic]
 
@@ -242,10 +246,14 @@ class Plugin(indigo.PluginBase):
     def sendMessage(self, action, dev):
         brokerName = dev.pluginProps["brokerName"]
         brokerStatusTopic = dev.pluginProps["brokerStatusTopic"]
-        brokerSecurity = dev.pluginProps["brokerSecurity"]
-        brokerClientPrefix = dev.pluginProps["brokerClientPrefix"]
-        brokerUsername = dev.pluginProps["brokerUsername"]
-        brokerPassword = dev.pluginProps["brokerPassword"]
+
+        try:
+            brokerSecurity = dev.pluginProps["brokerSecurity"]
+            brokerClientPrefix = dev.pluginProps["brokerClientPrefix"]
+            brokerUsername = dev.pluginProps["brokerUsername"]
+            brokerPassword = dev.pluginProps["brokerPassword"]
+        except:
+            brokerSecurity = False
 
         connectionString = ["/usr/local/bin/mosquitto_pub", "-h", brokerName, "-t", brokerStatusTopic]
 
@@ -300,10 +308,14 @@ class Plugin(indigo.PluginBase):
             brokerName = dev.pluginProps["brokerName"]
             brokerTopic = dev.pluginProps["brokerStatusTopic"]
             brokerMessage = dev.pluginProps["brokerStatusMessage"]
-            brokerSecurity = dev.pluginProps["brokerSecurity"]
-            brokerClientPrefix = dev.pluginProps["brokerClientPrefix"]
-            brokerUsername = dev.pluginProps["brokerUsername"]
-            brokerPassword = dev.pluginProps["brokerPassword"]
+
+            try:
+                brokerSecurity = dev.pluginProps["brokerSecurity"]
+                brokerClientPrefix = dev.pluginProps["brokerClientPrefix"]
+                brokerUsername = dev.pluginProps["brokerUsername"]
+                brokerPassword = dev.pluginProps["brokerPassword"]
+            except:
+                brokerSecurity = False
 
             connectionString = ["/usr/local/bin/mosquitto_pub", "-h", brokerName, "-t", brokerTopic]
 
@@ -335,10 +347,14 @@ class Plugin(indigo.PluginBase):
 
         brokerName = valuesDict["brokerName"]
         brokerTopic = valuesDict["brokerTopic"]
-        brokerSecurity = valuesDict["brokerSecurity"]
-        brokerClientPrefix = valuesDict["brokerClientPrefix"]
-        brokerUsername = valuesDict["brokerUsername"]
-        brokerPassword = valuesDict["brokerPassword"]
+
+        try:
+            brokerSecurity = dev.pluginProps["brokerSecurity"]
+            brokerClientPrefix = dev.pluginProps["brokerClientPrefix"]
+            brokerUsername = dev.pluginProps["brokerUsername"]
+            brokerPassword = dev.pluginProps["brokerPassword"]
+        except:
+            brokerSecurity = False
 
         connectionString = ["/usr/local/bin/mosquitto_pub", "-h", brokerName, "-t", brokerTopic]
 
