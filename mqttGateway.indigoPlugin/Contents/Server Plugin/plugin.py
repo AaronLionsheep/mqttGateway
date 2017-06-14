@@ -349,10 +349,10 @@ class Plugin(indigo.PluginBase):
         brokerTopic = valuesDict["brokerTopic"]
 
         try:
-            brokerSecurity = dev.pluginProps["brokerSecurity"]
-            brokerClientPrefix = dev.pluginProps["brokerClientPrefix"]
-            brokerUsername = dev.pluginProps["brokerUsername"]
-            brokerPassword = dev.pluginProps["brokerPassword"]
+            brokerSecurity = valuesDict["brokerSecurity"]
+            brokerClientPrefix = valuesDict["brokerClientPrefix"]
+            brokerUsername = valuesDict["brokerUsername"]
+            brokerPassword = valuesDict["brokerPassword"]
         except:
             brokerSecurity = False
 
