@@ -6,6 +6,19 @@
             <Field id="brokerName" type="textfield" defaultValue="server name">
                 <Label>Broker Hostname:</Label>
             </Field>
+            <Field id="brokerSecurity" type="checkbox" defaultValue="false">
+                <Label>Enable Secure Connection:</Label>
+            </Field>
+            <Field id="brokerClientPrefix" type="textfield" defaultValue="" visibleBindingId="brokerSecurity" visibleBindingValue="true">
+                <Label>Client Prefix:</Label>
+            </Field>
+            <Field id="brokerUsername" type="textfield" visibleBindingId="brokerSecurity" visibleBindingValue="true">
+                <Label>Client Username:</Label>
+            </Field>
+            <Field id="brokerPassword" type="textfield" visibleBindingId="brokerSecurity" visibleBindingValue="true" secure="true">
+                <Label>Client Password:</Label>
+            </Field>
+            <Field id="separator1" type="separator"/>
             <Field id="brokerTopic" type="textfield" defaultValue="device/status">
                 <Label>Topic:</Label>
             </Field>
@@ -15,7 +28,7 @@
             <Field id="SupportsOnState" type="checkbox" defaultValue="true">
                 <Label>Show ON/OFF state:</Label>
             </Field>
-            <Field id="separator1" type="separator"/>
+            <Field id="separator2" type="separator"/>
             <Field id="SupportsStatusRequest" type="checkbox" defaultValue="true">
                 <Label>Enable Status Request:</Label>
             </Field>
