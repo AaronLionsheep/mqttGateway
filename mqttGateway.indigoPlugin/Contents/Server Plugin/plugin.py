@@ -277,7 +277,7 @@ class Plugin(indigo.PluginBase):
                     re.search(r"\%(\w+)\%", brokerStatusMessage).group(1)].value, brokerStatusMessage)
 
             except:
-                self.debugLog("error trying to convert variable to string in message text")
+                noVar = 1
 
         except:
             # something wrong in the text typed by the user
