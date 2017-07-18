@@ -47,7 +47,7 @@ import Queue
 import threading
 import subprocess
 import re
-
+import json
 
 # Note the "indigo" module is automatically imported and made available inside
 # our global name space by the host process.
@@ -224,6 +224,19 @@ class Plugin(indigo.PluginBase):
                         try:
                             if item.upper() in ("ON", "OFF") and dev.pluginProps["SupportsOnState"] is True:
                                 dev.updateStateOnServer("onOffState", value=onOffState[item.upper()])
+                            if dev.pluginProps["SupportsVariableInsert"] is True and dev.pluginProps["insertInto"] is not None:
+                                variable = int(dev.pluginProps["insertInto"])
+                                self.debugLog("will put data into: %s" % variable)
+                                jsonMessage = json.loads(item)
+                                self.debugLog("going to decode %s" % jsonMessage)
+                                dataPathSteps = dev.pluginProps["pathToData"].split("->")
+                                self.debugLog("taking these steps: %s to get to the data" % dataPathSteps)
+                                for step in dataPathSteps:
+                                    jsonMessage = jsonMessage[step]
+                                    self.debugLog("narrowed down to: %s" % jsonMessage)
+                                
+                                indigo.variable.updateValue(variable, value=unicode(jsonMessage))
+                                    #indigo.server.log("Inserted %s into %s" % (jsonMessage, indigo.variables[variable].name))
                             else:
                                 dev.updateStateOnServer("topicMessage", value=item)
                         except e:
@@ -383,4 +396,3 @@ class Plugin(indigo.PluginBase):
             self.updatePrefs(valuesDict)
 
         return (True, valuesDict)
-
