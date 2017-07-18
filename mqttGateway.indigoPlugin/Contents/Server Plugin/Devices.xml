@@ -22,13 +22,26 @@
             <Field id="brokerTopic" type="textfield" defaultValue="device/status">
                 <Label>Topic:</Label>
             </Field>
-			<Field id="muteTopic" type="checkbox" defaultValue="false">
-				<Label>Disable topic update in Indigo Log</Label>
-			</Field>
+			      <Field id="muteTopic" type="checkbox" defaultValue="false">
+				        <Label>Disable topic update in Indigo Log</Label>
+			      </Field>
             <Field id="SupportsOnState" type="checkbox" defaultValue="true">
                 <Label>Show ON/OFF state:</Label>
             </Field>
             <Field id="separator2" type="separator"/>
+
+            <Field id="SupportsVariableInsert" type="checkbox" defaultValue="false">
+                <Label>Add value to variable:</Label>
+            </Field>
+            <Field id="insertInto" type="menu">
+                <Label>Insert in:</Label>
+                <List class="indigo.variables"/>
+            </Field>
+            <Field id="pathToData" type="textfield">
+                <Label>Enter path to data:</Label>
+            </Field>
+            <Field id="separator3" type="separator"/>
+
             <Field id="SupportsStatusRequest" type="checkbox" defaultValue="true">
                 <Label>Enable Status Request:</Label>
             </Field>
